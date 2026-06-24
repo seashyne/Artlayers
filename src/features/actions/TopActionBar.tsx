@@ -25,7 +25,7 @@ export const TopActionBar = () => {
       <button
         type="button"
         className="h-10 min-w-16 rounded-md px-3 text-sm font-medium text-slate-200 hover:bg-white/8"
-        onClick={() => setCamera({ x: 0, y: 0, zoom: 1 })}
+        onClick={() => setCamera({ x: 0, y: 0, zoom: 1, rotation: camera.rotation })}
       >
         {Math.round(camera.zoom * 100)}%
       </button>
@@ -34,7 +34,7 @@ export const TopActionBar = () => {
         label="Zoom in"
         onClick={() => setCamera({ ...camera, zoom: clamp(camera.zoom * 1.1, 0.12, 8) })}
       />
-      <IconButton icon={RotateCcw} label="Reset view" onClick={() => setCamera({ x: 0, y: 0, zoom: 1 })} />
+      <IconButton icon={RotateCcw} label="Reset view" onClick={() => setCamera({ x: 0, y: 0, zoom: 1, rotation: 0 })} />
       <div className="mx-1 h-7 w-px bg-white/10" />
       <IconButton icon={Save} label="Save" onClick={() => void persist()} />
       <IconButton icon={Download} label="Export PNG" onClick={() => window.dispatchEvent(new Event("artlayers:export"))} />

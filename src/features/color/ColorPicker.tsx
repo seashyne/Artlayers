@@ -1,6 +1,7 @@
 import { Panel } from "../../components/Panel";
 import { RangeControl } from "../../components/RangeControl";
 import { useAppStore } from "../../store/appStore";
+import { brushPresets } from "./brushPresets";
 
 const swatches = ["#f8fafc", "#ef4444", "#f97316", "#facc15", "#22c55e", "#38bdf8", "#a78bfa", "#f472b6"];
 
@@ -10,6 +11,18 @@ export const ColorPicker = () => {
 
   return (
     <Panel className="grid w-64 gap-4 rounded-lg p-4">
+      <div className="grid grid-cols-4 gap-2">
+        {brushPresets.map((preset) => (
+          <button
+            key={preset.id}
+            type="button"
+            className="rounded-md border border-white/10 bg-panel2 px-2 py-2 text-xs font-medium text-slate-200 hover:border-sky-300/50"
+            onClick={() => setBrush(preset.brush)}
+          >
+            {preset.name}
+          </button>
+        ))}
+      </div>
       <div className="flex items-center gap-3">
         <input
           aria-label="Brush color"
@@ -43,10 +56,18 @@ export const ColorPicker = () => {
       <RangeControl
         label="Smoothing"
         min={0}
-        max={0.9}
+        max={0.95}
         step={0.01}
         value={brush.smoothing}
         onChange={(smoothing) => setBrush({ smoothing })}
+      />
+      <RangeControl
+        label="Stabilizer"
+        min={0}
+        max={0.9}
+        step={0.01}
+        value={brush.stabilizer}
+        onChange={(stabilizer) => setBrush({ stabilizer })}
       />
     </Panel>
   );

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { createBrushEngine } from "../engine/brush/brushEngine";
+import { clampPointToCanvas, findNodeAtPoint, isPointInsideCanvas } from "../engine/canvas/bounds";
 import { loadProject } from "../engine/storage/projectDb";
 import { createPixiDrawingRenderer, type PixiDrawingRenderer } from "../renderer/pixiRenderer";
 import { selectActiveLayer, selectProject, useAppStore } from "../store/appStore";
@@ -21,6 +22,7 @@ export const useCanvasController = (): CanvasController => {
   const hostRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<PixiDrawingRenderer | null>(null);
   const activeStrokeRef = useRef<Stroke | null>(null);
+  const nodeDragRef = useRef<{ nodeId: string; dx: number; dy: number } | null>(null);
   const panRef = useRef<{ x: number; y: number } | null>(null);
   const spaceHeldRef = useRef(false);
 
@@ -101,6 +103,7 @@ export const useCanvasController = (): CanvasController => {
       host.setPointerCapture(event.pointerId);
       const state = useAppStore.getState();
       const shouldPan = spaceHeldRef.current || event.button === 1 || state.tool === "pan";
+      const point = renderer.toWorldPoint(event.clientX, event.clientY);
 
       if (shouldPan) {
         panRef.current = { x: event.clientX, y: event.clientY };
@@ -112,7 +115,17 @@ export const useCanvasController = (): CanvasController => {
         return;
       }
 
-      const point = renderer.toWorldPoint(event.clientX, event.clientY);
+      if (state.tool === "select") {
+        const node = findNodeAtPoint(layer.nodes, point);
+        useAppStore.getState().setSelectedNode(node?.id ?? null);
+        nodeDragRef.current = node ? { nodeId: node.id, dx: point.x - node.x, dy: point.y - node.y } : null;
+        return;
+      }
+
+      if (!isPointInsideCanvas(point, state.canvas)) {
+        return;
+      }
+
       activeStrokeRef.current = brushEngine.beginStroke(
         { x: point.x, y: point.y, pressure: event.pressure || 1 },
         layer.id,
@@ -137,14 +150,26 @@ export const useCanvasController = (): CanvasController => {
         return;
       }
 
+      if (nodeDragRef.current) {
+        const state = useAppStore.getState();
+        const point = renderer.toWorldPoint(event.clientX, event.clientY);
+        const clamped = clampPointToCanvas(point, state.canvas);
+        useAppStore.getState().updateImageNode(nodeDragRef.current.nodeId, {
+          x: clamped.x - nodeDragRef.current.dx,
+          y: clamped.y - nodeDragRef.current.dy
+        });
+        return;
+      }
+
       const stroke = activeStrokeRef.current;
       if (!stroke) {
         return;
       }
       const point = renderer.toWorldPoint(event.clientX, event.clientY);
+      const clamped = clampPointToCanvas(point, useAppStore.getState().canvas);
       activeStrokeRef.current = brushEngine.extendStroke(stroke, {
-        x: point.x,
-        y: point.y,
+        x: clamped.x,
+        y: clamped.y,
         pressure: event.pressure || 1
       });
       renderer.previewStroke(activeStrokeRef.current);
@@ -153,6 +178,7 @@ export const useCanvasController = (): CanvasController => {
     const pointerUp = (event: PointerEvent): void => {
       const renderer = rendererRef.current;
       panRef.current = null;
+      nodeDragRef.current = null;
       const stroke = activeStrokeRef.current;
       if (!renderer || !stroke) {
         if (host.hasPointerCapture(event.pointerId)) {

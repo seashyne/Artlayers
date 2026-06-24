@@ -25,7 +25,23 @@ export const executeCommand = (state: ProjectState, command: Command): ProjectSt
       return {
         ...state,
         layers: state.layers.map((layer) =>
-          layer.id === command.layerId ? { ...layer, strokes: [] } : layer
+          layer.id === command.layerId ? { ...layer, strokes: [], nodes: [] } : layer
+        )
+      };
+    case "ADD_NODE":
+      return {
+        ...state,
+        layers: state.layers.map((layer) =>
+          layer.id === command.node.layerId ? { ...layer, nodes: [...layer.nodes, command.node] } : layer
+        )
+      };
+    case "REMOVE_NODE":
+      return {
+        ...state,
+        layers: state.layers.map((layer) =>
+          layer.id === command.node.layerId
+            ? { ...layer, nodes: layer.nodes.filter((node) => node.id !== command.node.id) }
+            : layer
         )
       };
   }
@@ -57,7 +73,25 @@ export const undoCommand = (state: ProjectState, command: Command): ProjectState
       return {
         ...state,
         layers: state.layers.map((layer) =>
-          layer.id === command.layerId ? { ...layer, strokes: command.previousStrokes } : layer
+          layer.id === command.layerId
+            ? { ...layer, strokes: command.previousStrokes, nodes: command.previousNodes }
+            : layer
+        )
+      };
+    case "ADD_NODE":
+      return {
+        ...state,
+        layers: state.layers.map((layer) =>
+          layer.id === command.node.layerId
+            ? { ...layer, nodes: layer.nodes.filter((node) => node.id !== command.node.id) }
+            : layer
+        )
+      };
+    case "REMOVE_NODE":
+      return {
+        ...state,
+        layers: state.layers.map((layer) =>
+          layer.id === command.node.layerId ? { ...layer, nodes: [...layer.nodes, command.node] } : layer
         )
       };
   }

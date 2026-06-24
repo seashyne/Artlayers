@@ -1,4 +1,4 @@
-import { Brush, Eraser, Hand } from "lucide-react";
+import { Brush, Eraser, Hand, MousePointer2 } from "lucide-react";
 import { IconButton } from "../../components/IconButton";
 import { Panel } from "../../components/Panel";
 import { useAppStore } from "../../store/appStore";
@@ -7,6 +7,7 @@ import type { Tool } from "../../types/drawing";
 const tools: Array<{ id: Tool; label: string; icon: typeof Brush }> = [
   { id: "brush", label: "Brush", icon: Brush },
   { id: "eraser", label: "Eraser", icon: Eraser },
+  { id: "select", label: "Select node", icon: MousePointer2 },
   { id: "pan", label: "Pan", icon: Hand }
 ];
 

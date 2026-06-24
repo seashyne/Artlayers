@@ -1,6 +1,9 @@
 import { TopActionBar } from "../features/actions/TopActionBar";
+import { CanvasPanel } from "../features/canvas/CanvasPanel";
 import { CanvasSurface } from "../features/canvas/CanvasSurface";
+import { NavigatorPanel } from "../features/canvas/NavigatorPanel";
 import { ColorPicker } from "../features/color/ColorPicker";
+import { ImagePanel } from "../features/image/ImagePanel";
 import { LayerPanel } from "../features/layers/LayerPanel";
 import { Toolbar } from "../features/toolbar/Toolbar";
 import { useKeyboardShortcuts } from "../hooks/useKeyboardShortcuts";
@@ -22,11 +25,19 @@ export const App = () => {
           <LayerPanel />
         </div>
         <div className="pointer-events-auto col-start-1 row-start-3 mb-1 hidden self-end sm:block">
-          <ColorPicker />
+          <div className="grid gap-3">
+            <CanvasPanel />
+            <NavigatorPanel />
+            <ImagePanel />
+            <ColorPicker />
+          </div>
         </div>
         <div className="pointer-events-auto col-span-3 row-start-3 block self-end justify-self-center lg:hidden">
           <div className="flex max-w-[calc(100vw-2rem)] gap-3 overflow-x-auto">
             <ColorPicker />
+            <CanvasPanel />
+            <NavigatorPanel />
+            <ImagePanel />
             <LayerPanel />
           </div>
         </div>
