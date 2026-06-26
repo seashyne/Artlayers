@@ -1,4 +1,4 @@
-export type Tool = "brush" | "eraser" | "pan" | "select";
+export type Tool = "brush" | "eraser" | "pan" | "select" | "transform" | "shape" | "text" | "fill" | "eyedropper";
 
 export type BlendModeName = "normal" | "erase";
 
@@ -28,6 +28,7 @@ export interface Stroke {
 }
 
 export interface ImageNode {
+  type?: "image";
   id: string;
   layerId: string;
   name: string;
@@ -40,6 +41,41 @@ export interface ImageNode {
   opacity: number;
 }
 
+export interface ShapeNode {
+  type: "shape";
+  id: string;
+  layerId: string;
+  name: string;
+  shape: "rectangle" | "ellipse" | "line";
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  opacity: number;
+  fill: string;
+  stroke: string;
+  strokeWidth: number;
+}
+
+export interface TextNode {
+  type: "text";
+  id: string;
+  layerId: string;
+  name: string;
+  text: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation: number;
+  opacity: number;
+  color: string;
+  fontSize: number;
+}
+
+export type CanvasNode = ImageNode | ShapeNode | TextNode;
+
 export interface Layer {
   id: string;
   name: string;
@@ -49,7 +85,7 @@ export interface Layer {
   clipped: boolean;
   opacity: number;
   strokes: Stroke[];
-  nodes: ImageNode[];
+  nodes: CanvasNode[];
 }
 
 export interface Camera {

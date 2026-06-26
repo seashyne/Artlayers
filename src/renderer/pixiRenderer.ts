@@ -1,5 +1,5 @@
-import { Application, Container, Graphics, Sprite, Texture } from "pixi.js";
-import type { Camera, ImageNode, Layer, Point, ProjectState, Stroke } from "../types/drawing";
+import { Application, Container, Graphics, Sprite, Text, Texture } from "pixi.js";
+import type { Camera, CanvasNode, ImageNode, Layer, Point, ProjectState, ShapeNode, Stroke, TextNode } from "../types/drawing";
 import { hexToNumber } from "../utils/colors";
 
 export interface PixiDrawingRenderer {
@@ -14,8 +14,7 @@ export interface PixiDrawingRenderer {
 }
 
 const canvasBackground = "#0a0d13";
-const gridColor = 0x242a35;
-const majorGridColor = 0x323a49;
+const [gridColor, majorGridColor] = [0x242a35, 0x323a49];
 
 export const createPixiDrawingRenderer = (): PixiDrawingRenderer => {
   let app: Application | null = null;
@@ -23,9 +22,7 @@ export const createPixiDrawingRenderer = (): PixiDrawingRenderer => {
   let world = new Container();
   let layerRoot = new Container();
   let previewRoot = new Container();
-  let grid = new Graphics();
-  let canvasFrame = new Graphics();
-  let canvasMask = new Graphics();
+  let [grid, canvasFrame, canvasMask] = [new Graphics(), new Graphics(), new Graphics()];
   let camera: Camera = { x: 0, y: 0, zoom: 1, rotation: 0 };
   let eraserBackground = "#0f172a";
   let pendingProject: ProjectState | null = null;
@@ -102,6 +99,55 @@ export const createPixiDrawingRenderer = (): PixiDrawingRenderer => {
     return sprite;
   };
 
+  const shapeToGraphics = (node: ShapeNode): Graphics => {
+    const graphics = new Graphics();
+    graphics.position.set(node.x, node.y);
+    graphics.rotation = (node.rotation * Math.PI) / 180;
+    graphics.alpha = node.opacity;
+    const width = Math.max(1, node.width);
+    const height = Math.max(1, node.height);
+    const stroke = { color: hexToNumber(node.stroke), width: node.strokeWidth, alpha: 1 };
+
+    if (node.shape === "ellipse") {
+      graphics.ellipse(0, 0, width / 2, height / 2).fill(hexToNumber(node.fill)).stroke(stroke);
+      return graphics;
+    }
+    if (node.shape === "line") {
+      graphics.moveTo(-width / 2, -height / 2).lineTo(width / 2, height / 2).stroke(stroke);
+      return graphics;
+    }
+    graphics.rect(-width / 2, -height / 2, width, height).fill(hexToNumber(node.fill)).stroke(stroke);
+    return graphics;
+  };
+
+  const textToPixi = (node: TextNode): Text => {
+    const text = new Text({
+      text: node.text,
+      style: {
+        fill: node.color,
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: node.fontSize,
+        wordWrap: true,
+        wordWrapWidth: Math.max(32, node.width)
+      }
+    });
+    text.anchor.set(0.5);
+    text.position.set(node.x, node.y);
+    text.rotation = (node.rotation * Math.PI) / 180;
+    text.alpha = node.opacity;
+    return text;
+  };
+
+  const nodeToDisplay = (node: CanvasNode): Sprite | Graphics | Text => {
+    if (node.type === "shape") {
+      return shapeToGraphics(node);
+    }
+    if (node.type === "text") {
+      return textToPixi(node);
+    }
+    return nodeToSprite(node);
+  };
+
   const strokeToGraphics = (stroke: Stroke, background: string): Graphics => {
     const graphics = new Graphics();
     const points = stroke.points;
@@ -147,7 +193,7 @@ export const createPixiDrawingRenderer = (): PixiDrawingRenderer => {
     container.label = layer.name;
     container.alpha = layer.opacity;
     container.visible = layer.visible;
-    layer.nodes.forEach((node) => container.addChild(nodeToSprite(node)));
+    layer.nodes.forEach((node) => container.addChild(nodeToDisplay(node)));
     layer.strokes.forEach((stroke) => container.addChild(strokeToGraphics(stroke, background)));
     return container;
   };

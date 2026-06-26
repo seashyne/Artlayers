@@ -1,4 +1,4 @@
-import type { CanvasSettings, ImageNode, Point } from "../../types/drawing";
+import type { CanvasNode, CanvasSettings, Point } from "../../types/drawing";
 
 export const isPointInsideCanvas = (point: Pick<Point, "x" | "y">, canvas: CanvasSettings): boolean => {
   return (
@@ -15,7 +15,7 @@ export const clampPointToCanvas = (point: Point, canvas: CanvasSettings): Point 
   y: Math.min(canvas.height / 2, Math.max(-canvas.height / 2, point.y))
 });
 
-export const findNodeAtPoint = (nodes: ImageNode[], point: Pick<Point, "x" | "y">): ImageNode | undefined => {
+export const findNodeAtPoint = (nodes: CanvasNode[], point: Pick<Point, "x" | "y">): CanvasNode | undefined => {
   return [...nodes].reverse().find((node) => {
     const left = node.x - node.width / 2;
     const right = node.x + node.width / 2;

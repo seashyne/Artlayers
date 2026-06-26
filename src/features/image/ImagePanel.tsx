@@ -36,6 +36,7 @@ export const ImagePanel = () => {
     const image = await readImage(file);
     const scale = Math.min(1, (Math.min(canvas.width, canvas.height) * 0.55) / Math.max(image.width, image.height));
     addImageNode({
+      type: "image",
       id: createId("node"),
       layerId: activeLayer.id,
       name: file.name.replace(/\.[^.]+$/, "") || "Image",
@@ -52,7 +53,7 @@ export const ImagePanel = () => {
   return (
     <Panel className="grid w-72 max-w-full gap-4 rounded-lg p-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-slate-100">Image Edit</h2>
+        <h2 className="text-sm font-semibold text-slate-100">Transform</h2>
         <label className="grid h-10 w-10 cursor-pointer place-items-center rounded-md border border-white/10 text-slate-300 hover:bg-white/8">
           <ImagePlus size={18} />
           <input
@@ -77,6 +78,69 @@ export const ImagePanel = () => {
             value={selectedNode.name}
             onChange={(event) => updateImageNode(selectedNode.id, { name: event.target.value })}
           />
+          <div className="grid grid-cols-2 gap-2">
+            {(["x", "y", "width", "height"] as const).map((key) => (
+              <label key={key} className="grid gap-1 text-xs capitalize text-slate-400">
+                {key}
+                <input
+                  className="h-9 rounded-md border border-white/10 bg-panel2 px-2 text-sm text-slate-100"
+                  type="number"
+                  value={Math.round(selectedNode[key])}
+                  onChange={(event) => updateImageNode(selectedNode.id, { [key]: Number(event.target.value) })}
+                />
+              </label>
+            ))}
+          </div>
+          {selectedNode.type === "text" ? (
+            <>
+              <textarea
+                aria-label="Text content"
+                className="min-h-20 resize-none rounded-md border border-white/10 bg-panel2 p-2 text-sm text-slate-100"
+                value={selectedNode.text}
+                onChange={(event) => updateImageNode(selectedNode.id, { text: event.target.value })}
+              />
+              <RangeControl
+                label="Font size"
+                min={8}
+                max={180}
+                step={1}
+                value={selectedNode.fontSize}
+                onChange={(fontSize) => updateImageNode(selectedNode.id, { fontSize })}
+              />
+            </>
+          ) : null}
+          {selectedNode.type === "shape" ? (
+            <label className="grid gap-1 text-xs text-slate-400">
+              Shape
+              <select
+                className="h-9 rounded-md border border-white/10 bg-panel2 px-2 text-sm text-slate-100"
+                value={selectedNode.shape}
+                onChange={(event) =>
+                  updateImageNode(selectedNode.id, { shape: event.target.value as "rectangle" | "ellipse" | "line" })
+                }
+              >
+                <option value="rectangle">Rectangle</option>
+                <option value="ellipse">Ellipse</option>
+                <option value="line">Line</option>
+              </select>
+            </label>
+          ) : null}
+          {selectedNode.type === "shape" || selectedNode.type === "text" ? (
+            <label className="grid gap-1 text-xs text-slate-400">
+              Color
+              <input
+                className="h-9 w-full cursor-pointer rounded-md border border-white/10 bg-transparent"
+                type="color"
+                value={selectedNode.type === "shape" ? selectedNode.fill : selectedNode.color}
+                onChange={(event) =>
+                  updateImageNode(
+                    selectedNode.id,
+                    selectedNode.type === "shape" ? { fill: event.target.value, stroke: event.target.value } : { color: event.target.value }
+                  )
+                }
+              />
+            </label>
+          ) : null}
           <RangeControl
             label="Opacity"
             min={0.05}
@@ -103,7 +167,7 @@ export const ImagePanel = () => {
           </button>
         </div>
       ) : (
-        <p className="text-xs leading-5 text-slate-400">Import an image, choose Select, then drag it inside the canvas.</p>
+        <p className="text-xs leading-5 text-slate-400">Import an image or choose a node with Select/Transform to edit it.</p>
       )}
     </Panel>
   );

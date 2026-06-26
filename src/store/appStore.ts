@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { Command } from "../types/commands";
-import type { BrushSettings, Camera, CanvasSettings, ImageNode, Layer, ProjectState, Tool } from "../types/drawing";
+import type { BrushSettings, Camera, CanvasNode, CanvasSettings, Layer, ProjectState, Tool } from "../types/drawing";
 import { executeCommand, undoCommand } from "../engine/commands/commands";
 import { createLayer, duplicateLayer, getNextActiveLayerId } from "../engine/layers/layers";
 import { saveProject } from "../engine/storage/projectDb";
@@ -18,8 +18,8 @@ interface AppState extends ProjectState {
   setCanvas: (canvas: Partial<CanvasSettings>) => void;
   createCanvas: (canvas: CanvasSettings) => void;
   setSelectedNode: (nodeId: string | null) => void;
-  addImageNode: (node: ImageNode) => void;
-  updateImageNode: (nodeId: string, patch: Partial<Omit<ImageNode, "id" | "layerId" | "src">>) => void;
+  addImageNode: (node: CanvasNode) => void;
+  updateImageNode: (nodeId: string, patch: Record<string, unknown>) => void;
   removeSelectedNode: () => void;
   setActiveLayer: (layerId: string) => void;
   renameLayer: (layerId: string, name: string) => void;
@@ -114,7 +114,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((state) => ({
       layers: state.layers.map((layer) => ({
         ...layer,
-        nodes: layer.nodes.map((node) => (node.id === nodeId ? { ...node, ...patch } : node))
+        nodes: layer.nodes.map((node) => (node.id === nodeId ? ({ ...node, ...patch } as CanvasNode) : node))
       }))
     })),
   removeSelectedNode: () =>

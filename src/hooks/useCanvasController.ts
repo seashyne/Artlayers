@@ -4,8 +4,9 @@ import { clampPointToCanvas, findNodeAtPoint, isPointInsideCanvas } from "../eng
 import { loadProject } from "../engine/storage/projectDb";
 import { createPixiDrawingRenderer, type PixiDrawingRenderer } from "../renderer/pixiRenderer";
 import { selectActiveLayer, selectProject, useAppStore } from "../store/appStore";
-import type { Stroke } from "../types/drawing";
+import type { CanvasNode, Point, Stroke } from "../types/drawing";
 import { clamp } from "../utils/colors";
+import { createId } from "../utils/ids";
 
 interface CanvasController {
   hostRef: RefObject<HTMLDivElement | null>;
@@ -23,6 +24,7 @@ export const useCanvasController = (): CanvasController => {
   const rendererRef = useRef<PixiDrawingRenderer | null>(null);
   const activeStrokeRef = useRef<Stroke | null>(null);
   const nodeDragRef = useRef<{ nodeId: string; dx: number; dy: number } | null>(null);
+  const shapeDraftRef = useRef<{ layerId: string; start: Point } | null>(null);
   const panRef = useRef<{ x: number; y: number } | null>(null);
   const spaceHeldRef = useRef(false);
 
@@ -115,7 +117,7 @@ export const useCanvasController = (): CanvasController => {
         return;
       }
 
-      if (state.tool === "select") {
+      if (state.tool === "select" || state.tool === "transform") {
         const node = findNodeAtPoint(layer.nodes, point);
         useAppStore.getState().setSelectedNode(node?.id ?? null);
         nodeDragRef.current = node ? { nodeId: node.id, dx: point.x - node.x, dy: point.y - node.y } : null;
@@ -123,6 +125,44 @@ export const useCanvasController = (): CanvasController => {
       }
 
       if (!isPointInsideCanvas(point, state.canvas)) {
+        return;
+      }
+
+      if (state.tool === "fill") {
+        useAppStore.getState().setCanvas({ background: state.brush.color });
+        return;
+      }
+
+      if (state.tool === "eyedropper") {
+        const node = findNodeAtPoint(layer.nodes, point);
+        const color = node?.type === "shape" ? node.fill : node?.type === "text" ? node.color : state.canvas.background;
+        useAppStore.getState().setBrush({ color });
+        return;
+      }
+
+      if (state.tool === "text") {
+        const node: CanvasNode = {
+          type: "text",
+          id: createId("text"),
+          layerId: layer.id,
+          name: "Text",
+          text: "Text",
+          x: point.x,
+          y: point.y,
+          width: 280,
+          height: 80,
+          rotation: 0,
+          opacity: 1,
+          color: state.brush.color,
+          fontSize: 48
+        };
+        useAppStore.getState().runCommand({ type: "ADD_NODE", node });
+        useAppStore.getState().setSelectedNode(node.id);
+        return;
+      }
+
+      if (state.tool === "shape") {
+        shapeDraftRef.current = { layerId: layer.id, start: point };
         return;
       }
 
@@ -161,6 +201,10 @@ export const useCanvasController = (): CanvasController => {
         return;
       }
 
+      if (shapeDraftRef.current) {
+        return;
+      }
+
       const stroke = activeStrokeRef.current;
       if (!stroke) {
         return;
@@ -179,6 +223,34 @@ export const useCanvasController = (): CanvasController => {
       const renderer = rendererRef.current;
       panRef.current = null;
       nodeDragRef.current = null;
+      const shapeDraft = shapeDraftRef.current;
+      if (renderer && shapeDraft) {
+        shapeDraftRef.current = null;
+        const state = useAppStore.getState();
+        const point = clampPointToCanvas(renderer.toWorldPoint(event.clientX, event.clientY), state.canvas);
+        const width = Math.abs(point.x - shapeDraft.start.x);
+        const height = Math.abs(point.y - shapeDraft.start.y);
+        if (width > 4 || height > 4) {
+          const node: CanvasNode = {
+            type: "shape",
+            id: createId("shape"),
+            layerId: shapeDraft.layerId,
+            name: "Rectangle",
+            shape: "rectangle",
+            x: (shapeDraft.start.x + point.x) / 2,
+            y: (shapeDraft.start.y + point.y) / 2,
+            width: Math.max(8, width),
+            height: Math.max(8, height),
+            rotation: 0,
+            opacity: 1,
+            fill: state.brush.color,
+            stroke: state.brush.color,
+            strokeWidth: 2
+          };
+          useAppStore.getState().runCommand({ type: "ADD_NODE", node });
+          useAppStore.getState().setSelectedNode(node.id);
+        }
+      }
       const stroke = activeStrokeRef.current;
       if (!renderer || !stroke) {
         if (host.hasPointerCapture(event.pointerId)) {

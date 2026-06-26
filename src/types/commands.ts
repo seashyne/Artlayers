@@ -1,4 +1,4 @@
-import type { ImageNode, Layer, Stroke } from "./drawing";
+import type { CanvasNode, Layer, Stroke } from "./drawing";
 
 export type Command =
   | {
@@ -21,13 +21,13 @@ export type Command =
       type: "CLEAR_LAYER";
       layerId: string;
       previousStrokes: Stroke[];
-      previousNodes: ImageNode[];
+      previousNodes: CanvasNode[];
     }
   | {
       type: "ADD_NODE";
-      node: ImageNode;
+      node: CanvasNode;
     }
   | {
       type: "REMOVE_NODE";
-      node: ImageNode;
+      node: CanvasNode;
     };
