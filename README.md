@@ -9,7 +9,7 @@ npm install
 npm run dev
 ```
 
-Cloud login and file sync run through Vercel Node functions. Set these environment variables in Vercel before using cloud storage:
+Local file management works without an account and stores artwork in the browser with IndexedDB. Cloud login and file sync are optional and run through Vercel Node functions. Set these environment variables in Vercel before using cloud storage:
 
 ```bash
 AUTH_SECRET=replace-with-a-long-random-secret
@@ -44,7 +44,7 @@ React renders controls only. PixiJS renders the infinite canvas, strokes, layers
 - `Space + drag`: pan
 - `Ctrl/Cmd + Z`: undo
 - `Ctrl/Cmd + Shift + Z` or `Ctrl/Cmd + Y`: redo
-- `Ctrl/Cmd + S`: sync the active project to cloud and persist project to IndexedDB
+- `Ctrl/Cmd + S`: save the active project to the selected storage mode
 - `Ctrl/Cmd + E`: export PNG
 
 ## Canvas And Layers
@@ -68,4 +68,5 @@ React renders controls only. PixiJS renders the infinite canvas, strokes, layers
 - Select and move image nodes within the canvas.
 - Zoom, pan, rotate, and reset the canvas view.
 - Save/load the project in IndexedDB and export PNG.
-- Register/login and manage cloud-synced artwork files from the first screen.
+- Manage local artwork files from the first screen without registering.
+- Optionally register/login to manage cloud-synced artwork files.

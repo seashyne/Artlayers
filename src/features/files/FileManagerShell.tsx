@@ -1,8 +1,9 @@
-import { Cloud, FilePlus2, FolderOpen, Loader2, LogOut, Save, Trash2 } from "lucide-react";
+import { Cloud, FilePlus2, FolderOpen, HardDrive, Loader2, LogOut, Save, Trash2, X } from "lucide-react";
 import type { PropsWithChildren } from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAppStore, selectProject } from "../../store/appStore";
 import { useCloudStore } from "../../store/cloudStore";
+import { useLocalFileStore } from "../../store/localFileStore";
 import { AuthPanel } from "../auth/AuthPanel";
 
 const defaultCanvas = {
@@ -16,50 +17,67 @@ const formatSize = (bytes: number) => `${Math.max(1, Math.round(bytes / 1024))} 
 
 export const FileManagerShell = ({ children }: PropsWithChildren) => {
   const user = useCloudStore((state) => state.user);
-  const files = useCloudStore((state) => state.files);
-  const selectedFileId = useCloudStore((state) => state.selectedFileId);
-  const status = useCloudStore((state) => state.status);
-  const error = useCloudStore((state) => state.error);
+  const cloudFiles = useCloudStore((state) => state.files);
+  const selectedCloudFileId = useCloudStore((state) => state.selectedFileId);
+  const cloudStatus = useCloudStore((state) => state.status);
+  const cloudError = useCloudStore((state) => state.error);
   const bootstrap = useCloudStore((state) => state.bootstrap);
-  const saveProject = useCloudStore((state) => state.saveProject);
-  const loadProject = useCloudStore((state) => state.loadProject);
-  const removeFile = useCloudStore((state) => state.removeFile);
+  const saveCloudProject = useCloudStore((state) => state.saveProject);
+  const loadCloudProject = useCloudStore((state) => state.loadProject);
+  const removeCloudFile = useCloudStore((state) => state.removeFile);
   const signOut = useCloudStore((state) => state.signOut);
+  const localFiles = useLocalFileStore((state) => state.files);
+  const selectedLocalFileId = useLocalFileStore((state) => state.selectedFileId);
+  const localStatus = useLocalFileStore((state) => state.status);
+  const localError = useLocalFileStore((state) => state.error);
+  const refreshLocalFiles = useLocalFileStore((state) => state.refreshFiles);
+  const saveLocalProject = useLocalFileStore((state) => state.saveProject);
+  const loadLocalProject = useLocalFileStore((state) => state.loadProject);
+  const removeLocalFile = useLocalFileStore((state) => state.removeFile);
   const hydrateProject = useAppStore((state) => state.hydrateProject);
   const createCanvas = useAppStore((state) => state.createCanvas);
+  const [storageMode, setStorageMode] = useState<"local" | "cloud">("local");
+  const [showAuth, setShowAuth] = useState(false);
+  const isCloudMode = storageMode === "cloud" && Boolean(user);
+  const files = isCloudMode ? cloudFiles : localFiles;
+  const selectedFileId = isCloudMode ? selectedCloudFileId : selectedLocalFileId;
+  const status = isCloudMode ? cloudStatus : localStatus;
+  const error = isCloudMode ? cloudError : localError;
 
   useEffect(() => {
     void bootstrap();
-  }, [bootstrap]);
+    void refreshLocalFiles();
+  }, [bootstrap, refreshLocalFiles]);
+
+  useEffect(() => {
+    if (user) {
+      setShowAuth(false);
+      setStorageMode("cloud");
+    }
+  }, [user]);
 
   useEffect(() => {
     const saveCurrentProject = () => {
-      void saveProject(selectProject(useAppStore.getState()));
+      void (isCloudMode ? saveCloudProject : saveLocalProject)(selectProject(useAppStore.getState()));
     };
-    window.addEventListener("artlayers:cloud-save", saveCurrentProject);
-    return () => window.removeEventListener("artlayers:cloud-save", saveCurrentProject);
-  }, [saveProject]);
+    window.addEventListener("artlayers:save", saveCurrentProject);
+    return () => window.removeEventListener("artlayers:save", saveCurrentProject);
+  }, [isCloudMode, saveCloudProject, saveLocalProject]);
 
   const createFile = async () => {
     createCanvas(defaultCanvas);
-    await saveProject(selectProject(useAppStore.getState()), "Untitled Artwork");
+    await (isCloudMode ? saveCloudProject : saveLocalProject)(
+      selectProject(useAppStore.getState()),
+      isCloudMode ? "Cloud Artwork" : "Local Artwork"
+    );
   };
 
   const openSelectedFile = async (id: string) => {
-    const project = await loadProject(id);
-    hydrateProject(project);
+    const project = await (isCloudMode ? loadCloudProject(id) : loadLocalProject(id));
+    if (project) {
+      hydrateProject(project);
+    }
   };
-
-  if (!user) {
-    return (
-      <main className="relative h-dvh w-screen overflow-hidden bg-ink text-slate-100">
-        <div className="absolute inset-0 opacity-25">{children}</div>
-        <div className="absolute inset-0 bg-black/55 backdrop-blur-sm">
-          <AuthPanel />
-        </div>
-      </main>
-    );
-  }
 
   return (
     <main className="grid h-dvh w-screen grid-cols-[280px_1fr] overflow-hidden bg-ink text-slate-100">
@@ -68,20 +86,45 @@ export const FileManagerShell = ({ children }: PropsWithChildren) => {
           <div className="mb-3 flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2">
               <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md border border-sky-300/20 bg-sky-300/10 text-sky-200">
-                <Cloud size={17} />
+                {isCloudMode ? <Cloud size={17} /> : <HardDrive size={17} />}
               </div>
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-white">{user.name}</p>
-                <p className="truncate text-xs text-slate-400">{user.email}</p>
+                <p className="truncate text-sm font-medium text-white">{isCloudMode ? user?.name : "Local Files"}</p>
+                <p className="truncate text-xs text-slate-400">
+                  {isCloudMode ? user?.email : "Saved on this device"}
+                </p>
               </div>
             </div>
             <button
               type="button"
-              onClick={() => void signOut()}
-              title="Logout"
+              onClick={() => {
+                if (user) {
+                  void signOut();
+                  setStorageMode("local");
+                  return;
+                }
+                setShowAuth(true);
+              }}
+              title={user ? "Logout" : "Login for cloud sync"}
               className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-slate-400 hover:bg-white/8 hover:text-white"
             >
-              <LogOut size={16} />
+              {user ? <LogOut size={16} /> : <Cloud size={16} />}
+            </button>
+          </div>
+          <div className="mb-3 grid grid-cols-2 border border-white/10 bg-black/20 p-1">
+            <button
+              type="button"
+              onClick={() => setStorageMode("local")}
+              className={`h-8 text-xs ${!isCloudMode ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"}`}
+            >
+              Local
+            </button>
+            <button
+              type="button"
+              onClick={() => (user ? setStorageMode("cloud") : setShowAuth(true))}
+              className={`h-8 text-xs ${isCloudMode ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"}`}
+            >
+              Cloud
             </button>
           </div>
           <div className="grid grid-cols-3 gap-2">
@@ -90,15 +133,15 @@ export const FileManagerShell = ({ children }: PropsWithChildren) => {
             </button>
             <button
               type="button"
-              onClick={() => void saveProject(selectProject(useAppStore.getState()))}
-              title="Save to cloud"
+              onClick={() => void (isCloudMode ? saveCloudProject : saveLocalProject)(selectProject(useAppStore.getState()))}
+              title={isCloudMode ? "Save to cloud" : "Save locally"}
               className="file-action"
             >
               <Save size={16} />
             </button>
             <button
               type="button"
-              onClick={() => selectedFileId && void removeFile(selectedFileId)}
+              onClick={() => selectedFileId && void (isCloudMode ? removeCloudFile : removeLocalFile)(selectedFileId)}
               title="Delete selected file"
               className="file-action"
               disabled={!selectedFileId}
@@ -131,7 +174,7 @@ export const FileManagerShell = ({ children }: PropsWithChildren) => {
           ))}
           {files.length === 0 ? (
             <div className="border border-dashed border-white/10 p-4 text-center text-xs text-slate-500">
-              No cloud files yet.
+              {isCloudMode ? "No cloud files yet." : "No local files yet."}
             </div>
           ) : null}
         </div>
@@ -143,11 +186,26 @@ export const FileManagerShell = ({ children }: PropsWithChildren) => {
               {status === "saving" ? "Saving..." : "Syncing..."}
             </span>
           ) : (
-            error ?? "Cloud sync ready"
+            error ?? (isCloudMode ? "Cloud sync ready" : "Local storage ready")
           )}
         </footer>
       </aside>
-      <section className="relative min-w-0 overflow-hidden">{children}</section>
+      <section className="relative min-w-0 overflow-hidden">
+        {children}
+        {showAuth ? (
+          <div className="absolute inset-0 z-30 bg-black/55 backdrop-blur-sm">
+            <button
+              type="button"
+              onClick={() => setShowAuth(false)}
+              title="Close login"
+              className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-md border border-white/10 bg-panel/90 text-slate-300 hover:bg-white/10 hover:text-white"
+            >
+              <X size={17} />
+            </button>
+            <AuthPanel />
+          </div>
+        ) : null}
+      </section>
     </main>
   );
 };

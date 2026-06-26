@@ -64,7 +64,7 @@ export const useCloudStore = create<CloudState>((set, get) => ({
         await get().refreshFiles();
       }
     } catch (error) {
-      set({ bootstrapped: true, status: "error", error: (error as Error).message });
+      set({ bootstrapped: true, status: "idle", error: null });
     }
   },
   signIn: async (payload) => {

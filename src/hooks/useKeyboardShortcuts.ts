@@ -24,7 +24,7 @@ export const useKeyboardShortcuts = (): void => {
       }
       if (isCommand && event.key.toLowerCase() === "s") {
         event.preventDefault();
-        window.dispatchEvent(new Event("artlayers:cloud-save"));
+        window.dispatchEvent(new Event("artlayers:save"));
         void store.persist();
         return;
       }
