@@ -1,6 +1,19 @@
-import { Cloud, FilePlus2, FolderOpen, HardDrive, Loader2, LogOut, Save, Trash2, X } from "lucide-react";
+import {
+  Cloud,
+  Download,
+  FilePlus2,
+  FolderOpen,
+  HardDrive,
+  Loader2,
+  LogOut,
+  Save,
+  Trash2,
+  Upload,
+  X
+} from "lucide-react";
 import type { PropsWithChildren } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { downloadArtlayersFile, readArtlayersFile } from "../../engine/files/artlayersFile";
 import { useAppStore, selectProject } from "../../store/appStore";
 import { useCloudStore } from "../../store/cloudStore";
 import { useLocalFileStore } from "../../store/localFileStore";
@@ -33,6 +46,7 @@ export const FileManagerShell = ({ children }: PropsWithChildren) => {
   const [storageMode, setStorageMode] = useState<"local" | "cloud">("local");
   const [showAuth, setShowAuth] = useState(false);
   const [showNewProject, setShowNewProject] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
   const isCloudMode = storageMode === "cloud" && Boolean(user);
   const files = isCloudMode ? cloudFiles : localFiles;
   const selectedFileId = isCloudMode ? selectedCloudFileId : selectedLocalFileId;
@@ -73,6 +87,21 @@ export const FileManagerShell = ({ children }: PropsWithChildren) => {
     if (project) {
       hydrateProject(project);
     }
+  };
+
+  const saveCurrentProject = async () => {
+    await (isCloudMode ? saveCloudProject : saveLocalProject)(selectProject(useAppStore.getState()));
+  };
+
+  const importNativeFile = async (file: File) => {
+    const imported = await readArtlayersFile(file);
+    hydrateProject(imported.project);
+    await (isCloudMode ? saveCloudProject : saveLocalProject)(imported.project, imported.name);
+  };
+
+  const exportNativeFile = () => {
+    const selected = files.find((file) => file.id === selectedFileId);
+    downloadArtlayersFile(selectProject(useAppStore.getState()), selected?.name ?? "Untitled Artwork");
   };
 
   return (
@@ -123,30 +152,51 @@ export const FileManagerShell = ({ children }: PropsWithChildren) => {
               Cloud
             </button>
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <button type="button" onClick={() => setShowNewProject(true)} title="New file" className="file-action">
               <FilePlus2 size={16} />
               <span>New</span>
             </button>
             <button
               type="button"
-              onClick={() => void (isCloudMode ? saveCloudProject : saveLocalProject)(selectProject(useAppStore.getState()))}
+              onClick={() => void saveCurrentProject()}
               title={isCloudMode ? "Save to cloud" : "Save locally"}
               className="file-action"
             >
               <Save size={16} />
               <span>Save</span>
             </button>
+            <button type="button" onClick={() => importInputRef.current?.click()} title="Import .artlayers" className="file-action">
+              <Upload size={16} />
+              <span>Import</span>
+            </button>
+            <button type="button" onClick={exportNativeFile} title="Export .artlayers" className="file-action">
+              <Download size={16} />
+              <span>Export</span>
+            </button>
             <button
               type="button"
               onClick={() => selectedFileId && void (isCloudMode ? removeCloudFile : removeLocalFile)(selectedFileId)}
               title="Delete selected file"
-              className="file-action"
+              className="file-action col-span-2"
               disabled={!selectedFileId}
             >
               <Trash2 size={16} />
               <span>Delete</span>
             </button>
+            <input
+              ref={importInputRef}
+              className="sr-only"
+              type="file"
+              accept=".artlayers,application/json"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) {
+                  void importNativeFile(file);
+                }
+                event.currentTarget.value = "";
+              }}
+            />
           </div>
         </header>
 

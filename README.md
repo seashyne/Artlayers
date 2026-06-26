@@ -61,6 +61,7 @@ React renders controls only. PixiJS renders the infinite canvas, strokes, layers
 ## Current Capabilities
 
 - Create a canvas from presets or custom dimensions.
+- Import/export native `.artlayers` project files.
 - Draw brush and eraser strokes inside the canvas only.
 - Smooth line work with brush presets, smoothing, interpolation, and stabilizer controls.
 - Manage layers with add, delete, duplicate, reorder, rename, visibility, lock, opacity, alpha lock, and clipping flags.
