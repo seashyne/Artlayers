@@ -9,6 +9,14 @@ npm install
 npm run dev
 ```
 
+Cloud login and file sync run through Vercel Node functions. Set these environment variables in Vercel before using cloud storage:
+
+```bash
+AUTH_SECRET=replace-with-a-long-random-secret
+KV_REST_API_URL=your-upstash-or-vercel-kv-rest-url
+KV_REST_API_TOKEN=your-upstash-or-vercel-kv-rest-token
+```
+
 ## Verification
 
 ```bash
@@ -21,7 +29,8 @@ npm run build
 - `src/app` hosts the application shell and layout.
 - `src/components` contains reusable UI primitives.
 - `src/features` contains product UI features such as toolbar, layers, actions, and color controls.
-- `src/engine` contains drawing, stroke interpolation, command history, and storage logic.
+- `src/engine` contains drawing, stroke interpolation, command history, cloud file access, and storage logic.
+- `api` contains Vercel Node functions for account sessions and cloud file persistence.
 - `src/renderer` owns PixiJS lifecycle and WebGL rendering.
 - `src/store` contains Zustand state slices.
 - `src/hooks`, `src/utils`, and `src/types` provide typed shared helpers.
@@ -35,7 +44,7 @@ React renders controls only. PixiJS renders the infinite canvas, strokes, layers
 - `Space + drag`: pan
 - `Ctrl/Cmd + Z`: undo
 - `Ctrl/Cmd + Shift + Z` or `Ctrl/Cmd + Y`: redo
-- `Ctrl/Cmd + S`: persist project to IndexedDB
+- `Ctrl/Cmd + S`: sync the active project to cloud and persist project to IndexedDB
 - `Ctrl/Cmd + E`: export PNG
 
 ## Canvas And Layers
@@ -59,3 +68,4 @@ React renders controls only. PixiJS renders the infinite canvas, strokes, layers
 - Select and move image nodes within the canvas.
 - Zoom, pan, rotate, and reset the canvas view.
 - Save/load the project in IndexedDB and export PNG.
+- Register/login and manage cloud-synced artwork files from the first screen.
