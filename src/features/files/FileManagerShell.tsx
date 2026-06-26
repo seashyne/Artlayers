@@ -130,6 +130,7 @@ export const FileManagerShell = ({ children }: PropsWithChildren) => {
           <div className="grid grid-cols-3 gap-2">
             <button type="button" onClick={() => void createFile()} title="New file" className="file-action">
               <FilePlus2 size={16} />
+              <span>New</span>
             </button>
             <button
               type="button"
@@ -138,6 +139,7 @@ export const FileManagerShell = ({ children }: PropsWithChildren) => {
               className="file-action"
             >
               <Save size={16} />
+              <span>Save</span>
             </button>
             <button
               type="button"
@@ -147,6 +149,7 @@ export const FileManagerShell = ({ children }: PropsWithChildren) => {
               disabled={!selectedFileId}
             >
               <Trash2 size={16} />
+              <span>Delete</span>
             </button>
           </div>
         </header>
