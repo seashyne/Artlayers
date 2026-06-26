@@ -26,8 +26,8 @@ export const App = () => {
           <div className="pointer-events-auto col-start-3 row-start-2 hidden min-h-0 self-stretch lg:block">
             <LayerPanel />
           </div>
-          <div className="pointer-events-auto col-start-1 row-start-3 mb-1 hidden self-end sm:block">
-            <div className="grid gap-3">
+          <div className="pointer-events-auto col-start-1 row-start-3 mb-1 hidden max-h-[calc(100dvh-7rem)] self-end overflow-y-auto pr-1 sm:block">
+            <div className="grid min-w-0 gap-3">
               <CanvasPanel />
               <NavigatorPanel />
               <ImagePanel />

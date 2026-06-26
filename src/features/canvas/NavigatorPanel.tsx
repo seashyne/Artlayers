@@ -10,7 +10,7 @@ export const NavigatorPanel = () => {
   const setCamera = useAppStore((state) => state.setCamera);
 
   return (
-    <Panel className="grid w-72 gap-3 rounded-lg p-4">
+    <Panel className="grid w-72 max-w-full gap-3 rounded-lg p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-slate-100">Navigator</h2>
         <IconButton icon={RotateCcw} label="Reset rotation" onClick={() => setCamera({ ...camera, rotation: 0 })} />

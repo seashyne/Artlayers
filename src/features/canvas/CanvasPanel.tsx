@@ -16,7 +16,7 @@ export const CanvasPanel = () => {
   };
 
   return (
-    <Panel className="grid w-72 gap-4 rounded-lg p-4">
+    <Panel className="grid w-72 max-w-full gap-4 rounded-lg p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-slate-100">Canvas</h2>
         <IconButton
@@ -31,11 +31,11 @@ export const CanvasPanel = () => {
           <button
             key={preset.id}
             type="button"
-            className="grid gap-2 rounded-md border border-white/10 bg-panel2 p-2 text-left hover:border-sky-300/50"
+            className="grid min-w-0 gap-2 overflow-hidden rounded-md border border-white/10 bg-panel2 p-2 text-left hover:border-sky-300/50"
             onClick={() => setDraft(presetToCanvas(preset))}
           >
             <span
-              className="block rounded border border-white/10"
+              className="block w-full min-w-0 rounded border border-white/10"
               style={{
                 aspectRatio: `${preset.width} / ${preset.height}`,
                 background: preset.background

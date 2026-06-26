@@ -10,7 +10,7 @@ export const ColorPicker = () => {
   const setBrush = useAppStore((state) => state.setBrush);
 
   return (
-    <Panel className="grid w-64 gap-4 rounded-lg p-4">
+    <Panel className="grid w-64 max-w-full gap-4 rounded-lg p-4">
       <div className="grid grid-cols-4 gap-2">
         {brushPresets.map((preset) => (
           <button

@@ -50,7 +50,7 @@ export const ImagePanel = () => {
   };
 
   return (
-    <Panel className="grid w-72 gap-4 rounded-lg p-4">
+    <Panel className="grid w-72 max-w-full gap-4 rounded-lg p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-slate-100">Image Edit</h2>
         <label className="grid h-10 w-10 cursor-pointer place-items-center rounded-md border border-white/10 text-slate-300 hover:bg-white/8">
