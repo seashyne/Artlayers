@@ -1,5 +1,4 @@
 import { TopActionBar } from "../features/actions/TopActionBar";
-import { CanvasPanel } from "../features/canvas/CanvasPanel";
 import { CanvasSurface } from "../features/canvas/CanvasSurface";
 import { NavigatorPanel } from "../features/canvas/NavigatorPanel";
 import { ColorPicker } from "../features/color/ColorPicker";
@@ -28,7 +27,6 @@ export const App = () => {
               <div className="h-56 min-h-0">
                 <LayerPanel />
               </div>
-              <CanvasPanel />
               <NavigatorPanel />
               <ImagePanel />
               <ColorPicker />
@@ -37,7 +35,6 @@ export const App = () => {
           <div className="pointer-events-auto col-span-3 row-start-2 block self-end justify-self-center xl:hidden">
             <div className="flex max-w-[calc(100vw-2rem)] gap-3 overflow-x-auto">
               <ColorPicker />
-              <CanvasPanel />
               <NavigatorPanel />
               <ImagePanel />
               <LayerPanel />

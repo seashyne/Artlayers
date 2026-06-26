@@ -5,13 +5,7 @@ import { useAppStore, selectProject } from "../../store/appStore";
 import { useCloudStore } from "../../store/cloudStore";
 import { useLocalFileStore } from "../../store/localFileStore";
 import { AuthPanel } from "../auth/AuthPanel";
-
-const defaultCanvas = {
-  width: 1920,
-  height: 1080,
-  background: "#0f172a",
-  showBounds: true
-};
+import { NewProjectDialog } from "./NewProjectDialog";
 
 const formatSize = (bytes: number) => `${Math.max(1, Math.round(bytes / 1024))} KB`;
 
@@ -38,6 +32,7 @@ export const FileManagerShell = ({ children }: PropsWithChildren) => {
   const createCanvas = useAppStore((state) => state.createCanvas);
   const [storageMode, setStorageMode] = useState<"local" | "cloud">("local");
   const [showAuth, setShowAuth] = useState(false);
+  const [showNewProject, setShowNewProject] = useState(false);
   const isCloudMode = storageMode === "cloud" && Boolean(user);
   const files = isCloudMode ? cloudFiles : localFiles;
   const selectedFileId = isCloudMode ? selectedCloudFileId : selectedLocalFileId;
@@ -64,12 +59,13 @@ export const FileManagerShell = ({ children }: PropsWithChildren) => {
     return () => window.removeEventListener("artlayers:save", saveCurrentProject);
   }, [isCloudMode, saveCloudProject, saveLocalProject]);
 
-  const createFile = async () => {
-    createCanvas(defaultCanvas);
+  const createFile = async (canvas: Parameters<typeof createCanvas>[0]) => {
+    createCanvas(canvas);
     await (isCloudMode ? saveCloudProject : saveLocalProject)(
       selectProject(useAppStore.getState()),
       isCloudMode ? "Cloud Artwork" : "Local Artwork"
     );
+    setShowNewProject(false);
   };
 
   const openSelectedFile = async (id: string) => {
@@ -128,7 +124,7 @@ export const FileManagerShell = ({ children }: PropsWithChildren) => {
             </button>
           </div>
           <div className="grid grid-cols-3 gap-2">
-            <button type="button" onClick={() => void createFile()} title="New file" className="file-action">
+            <button type="button" onClick={() => setShowNewProject(true)} title="New file" className="file-action">
               <FilePlus2 size={16} />
               <span>New</span>
             </button>
@@ -208,6 +204,7 @@ export const FileManagerShell = ({ children }: PropsWithChildren) => {
             <AuthPanel />
           </div>
         ) : null}
+        {showNewProject ? <NewProjectDialog onClose={() => setShowNewProject(false)} onCreate={(canvas) => void createFile(canvas)} /> : null}
       </section>
     </main>
   );
